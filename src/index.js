@@ -1,6 +1,6 @@
 import React from "react";
 import { render } from "react-dom";
-import { compose, withHandlers, withState } from "recompose";
+import { compose, withHandlers, withState, withProps } from "recompose";
 import { AsyncCreatable } from "react-select";
 import "react-select/dist/react-select.css";
 
@@ -15,7 +15,6 @@ const db = [
 const ES = {
   async search(term) {
     return new Promise((resolve, reject) => {
-      console.log("Search Term:", term);
       setTimeout(() => {
         if (!term) resolve(db);
         else resolve(db.filter(({ value }) => value.startsWith(term)));
@@ -39,7 +38,8 @@ const ES = {
 
 const cache = withState("cache", "setCache", {});
 const value = withState("value", "setValue", null);
-const state = compose(cache, value);
+const element = withState("element", "setElement", null);
+const state = compose(element, cache, value);
 
 const handlers = withHandlers({
   loadOptions() {
@@ -52,8 +52,16 @@ const handlers = withHandlers({
       setValue(change.split(","));
     };
   },
-  onNewOptionClick({ cache, setCache, value: currentValues, setValue }) {
+  onNewOptionClick({
+    element,
+    cache,
+    setCache,
+    value: currentValues,
+    setValue
+  }) {
     return async ({ value }) => {
+      // element.blur();
+
       const option = await ES.create(value);
 
       setCache({
@@ -63,8 +71,16 @@ const handlers = withHandlers({
 
       setValue([...(currentValues || []), option.id]);
     };
+  },
+  setElementRef({ setElement }) {
+    return element => {
+      console.log(element);
+      setElement(element);
+    };
   }
 });
+
+const log = withProps(console.log);
 
 const enhance = compose(state, handlers);
 
@@ -72,14 +88,14 @@ const styles = {
   fontFamily: "sans-serif"
 };
 
-const App = enhance(props => (
+const App = enhance(({ setElementRef, ...props }) => (
   <div style={styles}>
-    {console.log(props.cache)}
     <AsyncCreatable
       multi
       labelKey="value"
       valueKey="id"
       simpleValue
+      ref={setElementRef}
       {...props}
     />
   </div>
