@@ -1,0 +1,20 @@
+{
+  "name": "react-select-asynccreatable",
+  "description": "Pattern for creating a option asynchronously",
+  "version": "0.0.0",
+  "dependencies": {
+    "recompose": "0.26.0",
+    "react-select": "1.1.0",
+    "react-dom": "16.0.0",
+    "react": "16.0.0"
+  },
+  "devDependencies": {
+    "react-scripts": "1.0.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}
