@@ -23,12 +23,12 @@ const ES = {
   async search(term) {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        if (!term) resolve(db);
-        else resolve(db.filter(({ value }) => value.startsWith(term)));
+        if (!term) resolve([...db]);
+        else resolve([...db.filter(({ value }) => value.startsWith(term))]);
       }, 1000);
     });
   },
-  async create(value) {
+  async create({ value }) {
     return new Promise((resolve, reject) => {
       const { id } = db[db.length - 1];
       const option = {
@@ -38,7 +38,10 @@ const ES = {
       };
 
       db.push(option);
-      resolve(option);
+
+      setTimeout(() => {
+        resolve(option);
+      }, 500);
     });
   }
 };
@@ -62,13 +65,13 @@ const handlers = withHandlers({
       setValue(change.split(","));
     };
   },
-  addOption({ cache, setCache, setValue, value }) {
+  addOption({ cache, setCache, setValue, value, options }) {
     return option => {
-      setCache({
-        ...cache,
-        [option.value]: [option]
-      });
-
+      Object.entries(cache).forEach(([key, cacheValues]) => {
+        if (option.value.startsWith(key))
+          cacheValues.push(option);
+      })
+      
       setValue([...(value || []), option.id]);
     };
   },
@@ -77,29 +80,27 @@ const handlers = withHandlers({
       setOption({ value });
       showModal(true);
     };
-  },
+  }
 });
 const modalHandlers = withHandlers({
   onRequestClose({ addOption, option, showModal }) {
     return async () => {
-      // const option = await ES.create(value);
-      console.log(option);
+      const _option = await ES.create(option);
+
+      addOption(_option);
+
       showModal(false);
     };
-  },
-})
+  }
+});
 
 // const modalProps = compose(
 //   withHandlers({
 //     createOption({ showModal, setOption, setOptionRequest }) {
 //       return async value => {
 //         showModal(true);
-        // const request = Promise.then();
 
-        // setOption({ value });
-        // setOptionRequest(request);
-
-        // return request;
+// return request;
 //       };
 //     }
 //   }),
@@ -108,7 +109,7 @@ const modalHandlers = withHandlers({
 
 const log = withProps(console.log);
 
-const enhance = compose(state, handlers, modalHandlers);
+const enhance = compose(state, handlers, modalHandlers, log);
 
 const styles = {
   fontFamily: "sans-serif"
@@ -124,7 +125,7 @@ const App = enhance(({ onRequestClose, show, ...props }) => (
       {...props}
     />
 
-    <Modal {...{onRequestClose, show}}>
+    <Modal {...{ onRequestClose, show }}>
       <div>Test Modal</div>
     </Modal>
   </div>
