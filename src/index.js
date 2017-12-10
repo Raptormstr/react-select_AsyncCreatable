@@ -94,19 +94,6 @@ const modalHandlers = withHandlers({
   }
 });
 
-// const modalProps = compose(
-//   withHandlers({
-//     createOption({ showModal, setOption, setOptionRequest }) {
-//       return async value => {
-//         showModal(true);
-
-// return request;
-//       };
-//     }
-//   }),
-//   mapProps(props => ({ modalProps: { ...props } }))
-// );
-
 const log = withProps(console.log);
 
 const enhance = compose(state, handlers, modalHandlers, log);
