@@ -1,8 +1,15 @@
 import React from "react";
 import { render } from "react-dom";
-import { compose, withHandlers, withState, withProps } from "recompose";
+import {
+  compose,
+  mapProps,
+  withHandlers,
+  withState,
+  withProps
+} from "recompose";
 import { AsyncCreatable } from "react-select";
 import "react-select/dist/react-select.css";
+import Modal from "material-ui/Modal";
 
 const db = [
   { id: 1, value: "one", happy: true },
@@ -39,7 +46,10 @@ const ES = {
 const cache = withState("cache", "setCache", {});
 const value = withState("value", "setValue", null);
 const element = withState("element", "setElement", null);
-const state = compose(element, cache, value);
+const show = withState("show", "showModal", false);
+const option = withState("option", "setOption", null);
+
+const state = compose(element, cache, value, show, option);
 
 const handlers = withHandlers({
   loadOptions() {
@@ -52,52 +62,71 @@ const handlers = withHandlers({
       setValue(change.split(","));
     };
   },
-  onNewOptionClick({
-    element,
-    cache,
-    setCache,
-    value: currentValues,
-    setValue
-  }) {
-    return async ({ value }) => {
-      // element.blur();
-
-      const option = await ES.create(value);
-
+  addOption({ cache, setCache, setValue, value }) {
+    return option => {
       setCache({
         ...cache,
-        [value]: [option]
+        [option.value]: [option]
       });
 
-      setValue([...(currentValues || []), option.id]);
+      setValue([...(value || []), option.id]);
     };
   },
-  setElementRef({ setElement }) {
-    return element => {
-      console.log(element);
-      setElement(element);
+  onNewOptionClick({ setOption, showModal }) {
+    return async ({ value }) => {
+      setOption({ value });
+      showModal(true);
     };
-  }
+  },
 });
+const modalHandlers = withHandlers({
+  onRequestClose({ addOption, option, showModal }) {
+    return async () => {
+      // const option = await ES.create(value);
+      console.log(option);
+      showModal(false);
+    };
+  },
+})
+
+// const modalProps = compose(
+//   withHandlers({
+//     createOption({ showModal, setOption, setOptionRequest }) {
+//       return async value => {
+//         showModal(true);
+        // const request = Promise.then();
+
+        // setOption({ value });
+        // setOptionRequest(request);
+
+        // return request;
+//       };
+//     }
+//   }),
+//   mapProps(props => ({ modalProps: { ...props } }))
+// );
 
 const log = withProps(console.log);
 
-const enhance = compose(state, handlers);
+const enhance = compose(state, handlers, modalHandlers);
 
 const styles = {
   fontFamily: "sans-serif"
 };
 
-const App = enhance(({ setElementRef, ...props }) => (
+const App = enhance(({ onRequestClose, show, ...props }) => (
   <div style={styles}>
     <AsyncCreatable
       multi
       labelKey="value"
       valueKey="id"
       simpleValue
-      ref={setElementRef}
       {...props}
     />
+
+    <Modal {...{onRequestClose, show}}>
+      <div>Test Modal</div>
+    </Modal>
   </div>
 ));
 
